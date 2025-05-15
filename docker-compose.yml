@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: imc-postgres
+    environment:
+      POSTGRES_USER: imcuser
+      POSTGRES_PASSWORD: imcpass
+      POSTGRES_DB: imc_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    container_name: imc-backend
+    environment:
+      - DATABASE_URL=postgresql://imcuser:imcpass@db:5432/imc_db
+    depends_on:
+      - db
+    ports:
+      - "8000:8000"
+
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    container_name: imc-frontend
+    depends_on:
+      - backend
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://backend:8000
+
+volumes:
+  pgdata:
+
+
+
+#docker-compose up --build

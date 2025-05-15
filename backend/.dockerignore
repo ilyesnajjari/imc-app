@@ -1,0 +1,32 @@
+# Ignorer fichiers Python inutiles
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.pytest_cache
+*.egg-info
+dist
+build
+
+# Ignorer environnements virtuels
+env
+venv
+ENV
+
+# Ignorer fichiers IDE
+.vscode
+.idea
+
+# Ignorer fichiers de logs
+*.log
+
+# Ignorer fichiers de configuration sensibles
+.env
+
+# Ignorer fichiers système
+.DS_Store
+
+# Ignorer docker-compose et autres fichiers non nécessaires dans l’image
+docker-compose.yml
+README.md
+test_imc.py
