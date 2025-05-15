@@ -39,8 +39,9 @@ if st.button("Afficher historique"):
 
 if st.button("Supprimer l'historique"):
     try:
-        response = requests.delete(f"{API_URL}/history/clear")
-        st.success(response["message"])
+response = requests.delete(f"{API_URL}/history/clear")
+response_data = response.json()
+st.success(response_data["message"])
     except Exception as e:
         st.error(f"Erreur lors de la suppression : {e}")
 
