@@ -1,6 +1,7 @@
 import streamlit as st
 from api_client import calculate_imc, save_imc, get_history
 import pandas as pd
+import requests
 
 st.set_page_config(page_title="Calculateur d'IMC", layout="centered")
 
