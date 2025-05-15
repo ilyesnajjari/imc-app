@@ -41,4 +41,11 @@ def history(db: Session = Depends(get_db)):
     return records
 
 
+@app.delete("/history/clear")
+def clear_history(db: Session = Depends(get_db)):
+    db.query(ImcModel).delete()
+    db.commit()
+    return {"message": "Historique supprimé"}
+
+
 #uvicorn main:app --reload

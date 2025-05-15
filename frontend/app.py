@@ -36,5 +36,12 @@ if st.button("Afficher historique"):
         st.error(f"Erreur lors de la récupération : {e}")
 
 
+if st.button("Supprimer l'historique"):
+    try:
+        response = requests.delete(f"{API_URL}/history/clear")
+        st.success(response["message"])
+    except Exception as e:
+        st.error(f"Erreur lors de la suppression : {e}")
+
 #streamlit run frontend/app.py
 

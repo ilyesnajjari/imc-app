@@ -24,11 +24,19 @@ def test_history():
     for rec in records:
         print(f"  - {rec['nom']} : IMC {rec['imc']} ({rec['interpretation']})")
 
+def test_clear_history():
+    resp = requests.delete(f"{BACKEND_URL}/history/clear")
+    assert resp.status_code == 200, "Erreur API clear"
+    print("Historique supprimé :", resp.json()["message"])
+
+
 if __name__ == "__main__":
     print("Tester l'API IMC FastAPI\n")
     test_calculate()
     test_save()
     test_history()
+    test_clear_history()
+
 
 
 #pip install requests
