@@ -4,6 +4,8 @@ from imc import calcul_imc, interpretation_imc
 from models import ImcRequest, ImcResult
 from db.database import SessionLocal, Base, engine
 from db.crud import create_imc_record, get_imc_history
+from db.crud import ImcModel
+from db.crud import clear_imc_history
 
 # Créer tables
 Base.metadata.create_all(bind=engine)
@@ -43,8 +45,7 @@ def history(db: Session = Depends(get_db)):
 
 @app.delete("/history/clear")
 def clear_history(db: Session = Depends(get_db)):
-    db.query(ImcModel).delete()
-    db.commit()
+    clear_imc_history(db)
     return {"message": "Historique supprimé"}
 
 

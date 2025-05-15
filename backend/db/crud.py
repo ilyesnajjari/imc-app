@@ -24,3 +24,8 @@ def create_imc_record(db: Session, nom: str, poids: float, taille: float, imc: f
 
 def get_imc_history(db: Session, limit: int = 10):
     return db.query(ImcModel).order_by(ImcModel.date.desc()).limit(limit).all()
+
+
+def clear_imc_history(db: Session):
+    db.query(ImcModel).delete()
+    db.commit()

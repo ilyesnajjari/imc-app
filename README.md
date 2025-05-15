@@ -1,109 +1,259 @@
-# imc-app
+# Projet Cloud – Calculateur d'IMC
 
-Cette application cloud permet de **calculer l'Indice de Masse Corporelle (IMC)** via une interface web simple (Streamlit) et une API performante (FastAPI), avec stockage des données utilisateurs dans une base PostgreSQL. Le tout est conteneurisé avec Docker et déployé sur Render.
+**Réalisé par** : Ilyes NAJJARI - Mayloane IPYANFAT - Saad ANIQ FILALI
 
----
+## 1. Introduction et objectifs
 
-## Architecture du projet
+Cette application cloud permet de calculer l'Indice de Masse Corporelle (IMC) via :
 
-imc-cloud-app/
-├── backend/ → API REST FastAPI
-│ ├── main.py
-│ ├── models.py
-│ ├── database.py
-│ ├── crud.py
-│ └── Dockerfile
-├── frontend/ → Interface web avec Streamlit
-│ ├── app.py
-│ ├── api_client.py
-│ ├── helpers.py
-│ └── Dockerfile
-├── requirements.txt → Dépendances communes
-├── docker-compose.yml → Déploiement local multi-services
-├── .gitignore
-└── .dockerignore
+- Une interface utilisateur web développée avec **Streamlit**
+- Une API REST performante créée avec **FastAPI**
+- Une base de données **PostgreSQL**
+- Une architecture conteneurisée avec **Docker**
+- Un déploiement local via **Docker Compose** et cloud via **Render**
 
+L’objectif est de fournir une solution moderne, portable, maintenable et scalable, adaptée à un environnement cloud réel.
 
+## 2. Architecture et Technologies
 
+### Schéma global du projet
 
----
+```
+imc-app/
+├── backend/
+│   ├── main.py
+│   ├── imc.py
+│   ├── models.py
+│   ├── db/
+│   │   ├── database.py
+│   │   ├── crud.py
+│   ├── requirements.txt
+│   ├── Dockerfile
+├── frontend/  # Interface utilisateur - Streamlit
+│   ├── app.py
+│   ├── api_client.py
+│   ├── helpers.py
+│   └── Dockerfile
+├── docker-compose.yml  # Orchestration locale
+├── requirements.txt  # Dépendances Python
+├── .env (ou variables Render)
+```
 
-## Technologies utilisées
+### Technologies utilisées
 
-| Composant          | Technologie                  |
-|--------------------|------------------------------|
-| **Frontend**       | Streamlit                    |
-| **Backend**        | FastAPI                      |
-| **Base de données**| PostgreSQL                   |
-| **API Client**     | `requests`, `pydantic`       |
-| **Conteneurisation** | Docker                      |
-| **Orchestration local** | Docker Compose            |
-| **Déploiement cloud** | Render                     |
+| Composant        | Technologie         |
+|------------------|---------------------|
+| Frontend         | Streamlit (Python)  |
+| Backend          | FastAPI (Python)    |
+| Base de données  | PostgreSQL          |
+| Conteneurs       | Docker              |
+| Orchestration    | Docker Compose      |
+| Déploiement cloud| Render              |
 
----
+### Fonctionnement de l'application IMC
 
-## Fonctionnalités
+1. L'utilisateur accède à l'application via l'URL : `https://imc-frontend-56wx.onrender.com`
+2. Il saisit son poids, sa taille et éventuellement son nom.
+3. Il clique sur **"Calculer IMC"** ou **"Sauvegarder ce calcul"**.
+4. Le frontend Streamlit envoie une requête POST au backend FastAPI (`https://imc-app-2n6k.onrender.com`).
+5. Le backend calcule l’IMC et renvoie la réponse.
+6. En cas de sauvegarde, les données sont stockées dans PostgreSQL.
+7. L’utilisateur peut consulter ou effacer son historique.
 
-- Calcul d'IMC à partir du poids et de la taille
-- Résultat catégorisé (Maigreur, Normal, Surpoids, Obésité, etc.)
-- Enregistrement des calculs dans une base de données PostgreSQL
-- Interface utilisateur responsive avec Streamlit
-- Appels à l’API via HTTP entre frontend et backend
-- Déploiement sur Render avec URL publique
+## 3. API REST (FastAPI)
 
----
+### Endpoints
 
-## URLs d'accès
+- `POST /calculate` → Calculer l’IMC sans sauvegarde
+- `POST /save` → Sauvegarder l’IMC
+- `GET /history` → Récupérer l’historique
+- `DELETE /history/clear` → Supprimer l’historique
 
-| Service     | URL Render |
-|-------------|------------|
-| **Frontend (Streamlit)** | [https://ton-frontend.onrender.com](https://ton-frontend.onrender.com) |
-| **Backend (FastAPI)**    | [https://ton-backend.onrender.com/docs](https://ton-backend.onrender.com/docs) |
+### Exemple de requête
 
----
+```json
+POST /imc
+{
+  "taille_cm": 170,
+  "poids_kg": 65
+}
+```
 
-## Lancer en local avec Docker Compose
+Réponse :
+```json
+{
+  "imc": 22.49,
+  "categorie": "Corpulence normale"
+}
+```
+
+## 4. Conteneurisation avec Docker
+
+### backend/Dockerfile
+
+```dockerfile
+FROM python:3.10-slim
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -r requirements.txt
+EXPOSE 8000
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### frontend/Dockerfile
+
+```dockerfile
+FROM python:3.10-slim
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir -r requirements.txt
+EXPOSE 8501
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+```
+
+### docker-compose.yml
+
+```yaml
+version: "3.9"
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/imcdb
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://backend:8000
+
+  db:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: imcdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+```
+
+## 5. Lancement local
 
 ```bash
-# À la racine du projet
+git clone https://github.com/ton-utilisateur/imc-cloud-app.git
+cd imc-cloud-app
 docker-compose up --build
+```
+
+- Frontend : http://localhost:8501
+- Backend : http://localhost:8000/docs
+
+## 6. Déploiement Render
+
+### A. Structure GitHub
+
+```
+imc-cloud-app/
+├── backend/
+├── frontend/
+├── docker-compose.yml
+```
+
+### B. Backend Render
+
+- Type : Web Service
+- Root directory : `backend/Dockerfile`
+- Port : 8000
+- Env var :
+  ```env
+  DATABASE_URL=postgresql://imc_db_user:NgaOJvjZNTSwNebwsI2lbSYUkOByrzD3@dpg-d0im4dje5dus739ogi20-a.oregon-postgres.render.com/imc_db
+  ```
+
+### C. Frontend Render
+
+- Type : Web Service
+- Root directory : `frontend/Dockerfile`
+- Port : 8501
+- Env var :
+  ```env
+  API_URL=https://imc-app-2n6k.onrender.com
+  ```
+
+### D. Base PostgreSQL
+
+- Créer une DB PostgreSQL sur Render
+- Copier le `DATABASE_URL` dans le backend
+
+## 7. Exemple de test API
+
+```bash
+curl -X POST https://imc-backend.onrender.com/imc   -H "Content-Type: application/json"    -d '{"taille_cm": 180, "poids_kg": 75, "nom":"Anonyme"}'
+```
+
+Réponse :
+```json
+{
+  "imc": 22.86,
+  "categorie": "Corpulence normale",
+  "nom": "Anonyme"
+}
+```
+
+## 8. Tests automatisés
+
+Fichier : `tests/test_imc.py`
+
+- `test_calculate()`
+- `test_save()`
+- `test_history()`
+- `test_clear_history()`
+
+## 9. Guide utilisateur
 
 Accès :
 
-Frontend : http://localhost:8501
-Backend : http://localhost:8000
+| Composant | URL Render |
+|----------|------------|
+| Frontend | https://imc-frontend-56wx.onrender.com |
+| Backend  | https://imc-app-2n6k.onrender.com     |
 
-## Variables d'environnement
+### Instructions
 
-Pour le backend (FastAPI): https://imc-app-2n6k.onrender.com
+- Ouvrir l’interface Streamlit frontend
+- Entrer taille et poids
+- Cliquer sur "Calculer"
+- L’IMC et sa catégorie s’affichent
 
-Pour le frontend (Streamlit): https://imc-frontend-56wx.onrender.com
+## 10. Fichiers essentiels
 
-# Exemple d'appel API
+`requirements.txt` :
 
-curl -X POST https://ton-backend.onrender.com/imc \
-     -H "Content-Type: application/json" \
-     -d '{"taille_cm": 180, "poids_kg": 75}'
+```
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pydantic
+python-dotenv
+streamlit
+requests
+```
 
+## 11. Conclusion
 
-## Guide utilisateur 
+Ce projet met en œuvre :
 
-
-Ouvrir l’interface : https://imc-frontend-56wx.onrender.com
-Saisir votre taille et poids
-L’application affiche votre IMC et sa catégorie
-Les résultats sont enregistrés dans la base PostgreSQL
-
-
-## Déploiement sur Render
-
-Créer un repo GitHub
-Ajouter backend/Dockerfile et frontend/Dockerfile
-Connecter Render à ce repo
-Créer 2 services Docker (backend et frontend)
-Ajouter les bonnes variables d’environnement
-Créer une base PostgreSQL Render et copier son DATABASE_URL
-
-## Auteur
-
-Projet réalisé par [Ilyes Najjari] dans le cadre du TP Cloud Computing (Calcul de l’IMC).
+- Une API REST moderne avec **FastAPI**
+- Une interface web légère avec **Streamlit**
+- Une base de données **PostgreSQL**
+- Une architecture **modulaire et conteneurisée**
+- Un **déploiement cloud complet** avec Render
