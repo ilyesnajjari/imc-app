@@ -19,3 +19,8 @@ def get_history():
     response = requests.get(f"{API_URL}/history")
     response.raise_for_status()
     return response.json()
+
+def clear_history():
+    response = requests.delete(f"{API_URL}/history/clear")
+    response.raise_for_status()
+    return response.json()

@@ -1,5 +1,5 @@
 import streamlit as st
-from api_client import calculate_imc, save_imc, get_history
+from api_client import calculate_imc, save_imc, get_history, clear_history
 import pandas as pd
 import requests
 
@@ -39,11 +39,11 @@ if st.button("Afficher historique"):
 
 if st.button("Supprimer l'historique"):
     try:
-response = requests.delete(f"{API_URL}/history/clear")
-response_data = response.json()
-st.success(response_data["message"])
+        response_data = clear_history()
+        st.success(response_data["message"])
     except Exception as e:
         st.error(f"Erreur lors de la suppression : {e}")
+
 
 #streamlit run frontend/app.py
 
