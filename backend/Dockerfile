@@ -16,9 +16,6 @@ COPY requirements.txt .
 # Installer les dépendances
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Ajouter le script d'attente PostgreSQL
-COPY ./backend/wait-for-postgres.sh .
-RUN chmod +x wait-for-postgres.sh
 
 EXPOSE 8000
 
